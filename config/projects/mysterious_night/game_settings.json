@@ -1,0 +1,4 @@
+{  
+  "base_data" : ["Grid", "Strips", "Paylines", "Paytable"],
+  "bonus_data" : ["Bonus_Spawner", "Card_Multiplier_Spawner", "Levels"]
+}

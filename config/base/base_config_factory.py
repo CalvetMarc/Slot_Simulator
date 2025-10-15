@@ -1,5 +1,5 @@
 from pathlib import Path
-from config.base.base_config_loader import load_all_tables
+from config.base.data_loader import load_game_tables
 
 # ---- Simple wrapper classes (expandable later) ----
 class Grid:
@@ -140,34 +140,33 @@ class Paytable:
         """Return the full paytable dictionary."""
         return self.table
 
-
-
 # ---- Factory that builds everything ----
-class SlotConfigFactory:
+class BaseConfigFactory:
     """
     Loads the Excel tables for a specific slot game
     and builds the configuration objects (Grid, Strips, Paylines, Paytable).
     """
 
     def __init__(self, game_name, base_dir=None):
-        # Default base directory is the root of the project
-        root = Path(__file__).resolve().parents[2]  # goes up from /config/base/
+        root = Path(__file__).resolve().parents[2]
         self.base_path = Path(base_dir or root / "config" / "projects" / game_name)
         self.file_name = "slot_config.xlsx"
         self.game_name = game_name
 
-    def build(self):
-        """Loads all standard tables and builds config objects."""
-        tables = load_all_tables(self.base_path, self.file_name)
+    def build(self, table_names):
+        """Loads all tables listed in table_names and builds config objects."""
+        tables = load_game_tables(table_names, self.base_path, self.file_name)
 
-        strips = Strips(tables.get("strips"))
-        grid = Grid(tables.get("grid"), strips)
-
-        config = {
-            "grid": grid,
-            "strips": strips,
-            "paylines": Paylines(tables.get("paylines")),
-            "paytable": Paytable(tables.get("paytable")),
-        }
+        # Create objects conditionally
+        config = {}
+        if "Grid" in table_names:
+            strips = Strips(tables.get("strips"))
+            config["grid"] = Grid(tables.get("grid"), strips)
+            config["strips"] = strips
+        if "Paylines" in table_names:
+            config["paylines"] = Paylines(tables.get("paylines"))
+        if "Paytable" in table_names:
+            config["paytable"] = Paytable(tables.get("paytable"))
 
         return config
+
