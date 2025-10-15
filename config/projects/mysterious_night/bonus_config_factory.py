@@ -1,3 +1,4 @@
+import pandas as pd
 from pathlib import Path
 from config.base.data_loader import load_game_tables
 
@@ -23,14 +24,25 @@ class BonusSpawner:
 
 
 class CardMultiplierSpawner:
-    """Represents the card multiplier probabilities as a dictionary: { multiplier: probability%, ... }"""
+    """
+    Represents the card multiplier probabilities as a dictionary:
+        { multiplier: probability%, ... }
+    """
     def __init__(self, df):
         self.data = df
+
+        # Normalitzem noms de columnes
         df.columns = [str(c).strip().lower() for c in df.columns]
 
+        # Verifiquem que existeixen les columnes necessàries
+        if "card multiplier" not in df.columns or "probability" not in df.columns:
+            raise KeyError(f"❌ Expected columns 'Card Multiplier' and 'Probability' not found in {list(df.columns)}")
+
+        # Creem el diccionari {multiplier: probability%}, multiplicant per 100
         self.multipliers = {
-            int(row["card multiplier"]): float(row["probability %"])
+            int(row["card multiplier"]): float(row["probability"]) * 100
             for _, row in df.iterrows()
+            if not pd.isna(row["card multiplier"])
         }
 
     def __repr__(self):
@@ -39,6 +51,7 @@ class CardMultiplierSpawner:
     def get_probability(self, multiplier):
         """Return the probability % for a given multiplier value."""
         return self.multipliers.get(multiplier, 0.0)
+
 
 
 # ---- Bonus Levels ----
@@ -109,11 +122,11 @@ class BonusConfigFactory:
 
         config = {}
 
-        if "bonus spawner" in tables:
-            config["bonus_spawner"] = BonusSpawner(tables["bonus spawner"])
+        if "bonus_spawner" in tables:
+            config["bonus_spawner"] = BonusSpawner(tables["bonus_spawner"])
 
-        if "card multiplier spawner" in tables:
-            config["card_multiplier_spawner"] = CardMultiplierSpawner(tables["card multiplier spawner"])
+        if "card_multiplier_spawner" in tables:
+            config["card_multiplier_spawner"] = CardMultiplierSpawner(tables["card_multiplier_spawner"])
 
         if "levels" in tables:
             config["levels"] = BonusLevels(tables["levels"])

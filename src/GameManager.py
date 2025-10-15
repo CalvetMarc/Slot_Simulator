@@ -8,7 +8,7 @@ from src.game.BaseSlotGame import BaseSlotGame
 
 class GameManager:
     """
-    Loads configuration and runs the slot game.
+    Loads configuration and runs the slot game (base + bonus).
     """
 
     def __init__(self):
@@ -34,11 +34,12 @@ class GameManager:
 
         # Get table names from the file
         base_tables = self.game_settings.get("base_data", [])
-        bonus_tables = self.game_settings.get("bonus_data", [])       
+        bonus_tables = self.game_settings.get("bonus_data", [])
 
         # 🔹 Load Excel config via the factory
         base_factory = BaseConfigFactory(self.game_name)
         base_config = base_factory.build(base_tables)
+
         # 🔹 Initialize the base game
         self.game = BaseSlotGame(**base_config)
 
@@ -70,27 +71,53 @@ class GameManager:
             self.bonus = None
             print(f"⚠️ No bonus_config_factory found for '{self.game_name}'. Skipping bonus setup.")
 
+
+    # ---------------------------------------------------------------------
     def test(self):
         """Runs a basic demo spin for the current game."""
         print("\n🚀 Running game demo...")
         self.game.spin(True)
         self.game.evaluate_spin(1, True)
 
-    def simulate_rtp(self, total_spins=1000000, bet=1.0):
-        """Runs a full RTP simulation for the base game."""
+
+    # ---------------------------------------------------------------------
+    def simulate_rtp(self, total_spins=1, bet=1.0):
+        """Runs a full RTP simulation for the base game and triggers bonus when applicable."""
         total_bet = 0.0
         total_win = 0.0
+        bonus_triggers = 0
 
         for spin_index in range(total_spins):
-            self.game.spin()
+            # --- Base spin ---
+            spin_result = self.game.spin()
             win = self.game.evaluate_spin(bet)
-            total_bet += bet
-            total_win += win            
 
+            total_bet += bet
+            total_win += win
+
+            # --- Check for bonus trigger ---
+            scatter_count = sum(
+                1
+                for row in self.game.grid.grid
+                for symbol in row
+                if str(symbol).lower() == "scatter"
+            )
+
+            if scatter_count >= 3 and self.bonus:
+                bonus_triggers += 1
+                print(f"\n🎁 BONUS TRIGGERED! ({scatter_count} scatters)")
+                grid_size = (self.game.grid.rows, self.game.grid.columns)
+                bonus_win = self.bonus.start(scatters=scatter_count, bet=bet, gridSize=grid_size)
+                total_win += bonus_win
+
+        # --- Final RTP results ---
         rtp = (total_win / total_bet) * 100 if total_bet > 0 else 0
+
         print("\n📊 Simulation complete!")
         print(f"Total spins: {total_spins}")
         print(f"Total bet: {total_bet:.2f}")
         print(f"Total win: {total_win:.2f}")
         print(f"🎯 Observed RTP: {rtp:.2f}%")
+        print(f"🎰 Bonus triggers: {bonus_triggers}")
+
         return rtp
