@@ -1,0 +1,7 @@
+{  
+  "game_name": "mysterious_night",
+  "base_bet": 1.0,
+  "total_spins": 100000,
+  "rng_seed": 1234,
+  "simulate_bonus": false
+}
