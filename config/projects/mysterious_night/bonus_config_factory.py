@@ -116,34 +116,45 @@ class BonusConfigFactory:
         self.file_name = "slot_config.xlsx"
         self.game_name = game_name
 
-    def build(self, table_names):
+    def build(self, table_names, debug = False):
         """Loads all tables listed in table_names and builds config objects."""
+
+        print("Loading Bonus Config...")
         tables = load_game_tables(table_names, self.base_path, self.file_name)
 
         config = {}
 
         if "bonus_spawner" in tables:
-            config["bonus_spawner"] = BonusSpawner(tables["bonus_spawner"])
-            print("\n📦 BONUS SPAWNER DATAFRAME:")
-            print(tables["bonus_spawner"])
-            print("\n📦 BONUS SPAWNER PROBABILITIES (%):")
-            print(config["bonus_spawner"].probabilities)
+            config["bonus_spawner"] = BonusSpawner(tables["bonus_spawner"])                
 
         if "card_multiplier_spawner" in tables:
-            config["card_multiplier_spawner"] = CardMultiplierSpawner(tables["card_multiplier_spawner"])
-            print("\n🎴 CARD MULTIPLIER SPAWNER DATAFRAME:")
-            print(tables["card_multiplier_spawner"])
-            print("\n🎴 CARD MULTIPLIER SPAWNER MULTIPLIERS (%):")
-            print(config["card_multiplier_spawner"].multipliers)
+            config["card_multiplier_spawner"] = CardMultiplierSpawner(tables["card_multiplier_spawner"])                
 
         if "levels" in tables:
             config["levels"] = BonusLevels(tables["levels"])
-            print("\n🧱 BONUS LEVELS DATAFRAME:")
-            print(tables["levels"])
-            print("\n🧱 PARSED BONUS LEVEL OBJECTS:")
+                
+        
+        print("BONUS CONFIG LOADED SUCCESSFULLY ✅\n")
+
+        if(debug):
+            print("────────────────────────────────\n")
+            print("Debug Loaded Bonus Data")      
+            print("\n────────────────────────────────")
+
+            print("\nBONUS SPAWNER DATAFRAME:")
+            print(tables["bonus_spawner"].to_string(index=False))
+            print("\nBONUS SPAWNER PROBABILITIES (%):")
+            print(config["bonus_spawner"].probabilities)
+            print("\nCARD MULTIPLIER SPAWNER DATAFRAME:")
+            print(tables["card_multiplier_spawner"].to_string(index=False))
+            print("\nCARD MULTIPLIER SPAWNER MULTIPLIERS (%):")
+            print(config["card_multiplier_spawner"].multipliers)
+            print("\nBONUS LEVELS DATAFRAME:")
+            print(tables["levels"].to_string(index=False))
+            print("\nPARSED BONUS LEVEL OBJECTS:")
             for lvl in config["levels"].levels:
                 print(f" - {lvl}")
 
-        print("\n✅ BONUS CONFIGURATION LOADED SUCCESSFULLY.")
-        print(f"Loaded tables: {list(tables.keys())}")        
+            print("\n")
+
         return config

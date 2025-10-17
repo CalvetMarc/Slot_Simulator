@@ -54,5 +54,5 @@ def load_game_tables(table_names, base_path, file_name="slot_config.xlsx"):
             else:
                 print(f"⚠️ Table or sheet '{table_name}' not found in workbook.")
 
-    print(f"✅ Loaded tables: {list(result.keys())}")
+    print(f"Loaded tables: {list(result.keys())} ✅")
     return result

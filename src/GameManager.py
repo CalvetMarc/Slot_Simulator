@@ -65,8 +65,6 @@ class GameManager:
                 bonusLevels=bonus_config.get("levels")
             )
 
-            print(f"✅ Bonus configuration loaded for '{self.game_name}'")
-
         except ModuleNotFoundError:
             self.bonus = None
             print(f"⚠️ No bonus_config_factory found for '{self.game_name}'. Skipping bonus setup.")
@@ -81,12 +79,12 @@ class GameManager:
 
 
     # ---------------------------------------------------------------------
-    def simulate_rtp(self, total_spins=1000000, bet=1.0):
+    def simulate_rtp(self, debug=False, total_spins=2000000, bet=1.0):
         """
         Runs a full RTP simulation for the base game and triggers bonus when applicable.
         Prints total RTP, base RTP, bonus RTP, and detailed debug stats for the bonus behavior.
         """
-        print("────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+        print("────────────────────────────────\n")
         print("RTP Simulation In Progress...")
 
         total_bet = 0.0
@@ -166,24 +164,25 @@ class GameManager:
         avg_multi_per_spin = total_bonus_multiplier_sum / total_bonus_spins if total_bonus_spins > 0 else 0
         avg_total_multi_per_bonus = total_bonus_multiplier_final / max(1, bonus_triggers)
 
-        print("\n📊 Simulation complete!")
-        print(f"Total spins: {total_spins:,}")
-        print(f"Total bet: {total_bet:.2f}")
-        print(f"Base wins: {base_win_total:.2f}")
-        print(f"Bonus wins: {bonus_win_total:.2f}")
-        print(f"🎰 Bonus triggers: {bonus_triggers:,}")
-        print(f"🔄 Total bonus spins played: {bonus_total_spins:,}")
-        print(f"📏 Avg spins per bonus: {avg_bonus_spins:.2f}")
-        print("────────────────────────────")
-        print(f"🎯 Base RTP:  {base_rtp:.2f}%")
-        print(f"🎯 Bonus RTP: {bonus_rtp:.2f}%")
-        print(f"🏁 TOTAL RTP: {total_rtp:.2f}%")
-        print("────────────────────────────")
-        print("🧪 BONUS DEBUG STATS")
-        print(f"📦 Avg Card Front per spin: {avg_cf_per_spin:.3f}")
-        print(f"🧰 Chest probability per spin: {chest_prob_per_spin*100:.2f}%")
-        print(f"🔢 Avg multiplier per spin: {avg_multi_per_spin:.3f}")
-        print(f"💰 Avg total multiplier per bonus: {avg_total_multi_per_bonus:.3f}")
+        print("Simulation complete! ✅")
+        print("\n────────────────────────────────")
+
+        if(debug) :           
+            print("\nDebug Analytics\n")
+            
+            print(f"🎯 Base RTP:  {base_rtp:.2f}%")
+            print(f"🎯 Bonus RTP: {bonus_rtp:.2f}%")
+            print(f"🏁 TOTAL RTP: {total_rtp:.2f}%")
+
+            
+            print(f"\nBonus Played: {bonus_triggers:,}")
+            print(f"Avg spins per bonus: {avg_bonus_spins:.2f}")            
+            print(f"Avg multiplier per spin: {avg_multi_per_spin:.3f}")
+            print(f"Avg total multiplier per bonus: {avg_total_multi_per_bonus:.3f}")
+            print(f"Avg Card Front per spin: {avg_cf_per_spin:.3f}")
+            print(f"Chest probability per spin: {chest_prob_per_spin*100:.2f}%")
+            print("\n────────────────────────────────")
+            
 
         return total_rtp
 

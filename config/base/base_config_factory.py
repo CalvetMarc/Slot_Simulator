@@ -153,8 +153,11 @@ class BaseConfigFactory:
         self.file_name = "slot_config.xlsx"
         self.game_name = game_name
 
-    def build(self, table_names):
+    def build(self, table_names, debug=False):
         """Loads all tables listed in table_names and builds config objects."""
+
+        print("Loading Base Config...")
+
         tables = load_game_tables(table_names, self.base_path, self.file_name)
 
         # Create objects conditionally
@@ -167,6 +170,19 @@ class BaseConfigFactory:
             config["paylines"] = Paylines(tables.get("paylines"))
         if "Paytable" in table_names:
             config["paytable"] = Paytable(tables.get("paytable"))
+
+        print("BASE CONFIG LOADED SUCCESSFULLY ✅ \n")
+
+        if debug:
+            print("──────────────────────────────\n")
+            print("DEBUG Loaded Base Data")
+            print("\n──────────────────────────────")
+
+            for name, df in tables.items():
+                print(f"\nTABLE: {name}")
+                print(df.to_string(index=False))  # <-- sense índex       
+
+            print("\n──────────────────────────────\n")
 
         return config
 
