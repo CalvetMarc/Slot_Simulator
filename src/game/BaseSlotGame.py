@@ -1,4 +1,4 @@
-import random
+from src.freeprngLib import pcg
 
 class BaseSlotGame:
     """
@@ -29,7 +29,8 @@ class BaseSlotGame:
         # For each reel (strip)
         for reel_index in range(num_reels):
             reel = self.strips.reels[reel_index]
-            start_index = random.randint(0, len(reel) - 1)
+            # 🔹 Usa el teu RNG en comptes de random.randint
+            start_index = pcg.get_int_between(0, len(reel) - 1)
 
             # Get visible symbols (wrap around if needed)
             visible = [reel[(start_index + i) % len(reel)] for i in range(num_rows)]
@@ -49,7 +50,6 @@ class BaseSlotGame:
             formatted_row = " | ".join(f"{symbol:<{col_widths[i]}}" for i, symbol in enumerate(row))
             if debug:
                 print(formatted_row)
-
 
         # Update the internal grid to reflect the spin
         self.grid.grid = spin_result

@@ -1,4 +1,4 @@
-import random
+from src.freeprngLib import pcg
 
 class BonusSlotGame:
     """
@@ -88,14 +88,17 @@ class BonusSlotGame:
 
     # --------------------------------------------------------------
     def spin(self, debug=False):
-        """Genera la grid i calcula el multiplicador d’un spin del bonus."""
+        """Genera la grid i calcula el multiplicador d’un spin del bonus (usant PCG RNG)."""
         current_spin_multiplier = 0
         grid = []
+
+        # Exemple: inicialitza la llavor (pots fer-ho un cop globalment fora d'aquí)        
 
         for _ in range(self.grid_rows):
             fila = []
             for _ in range(self.grid_cols):
-                rand_value = random.uniform(0, 100)
+                # --- Usa el teu RNG natiu ---
+                rand_value = pcg.get_float_between(0.0, 100.0)
                 selected_element = None
                 cumulative = 0
 
@@ -108,7 +111,7 @@ class BonusSlotGame:
 
                 # Si és "Card Front", afegir multiplicador
                 if selected_element and selected_element.lower() == "card front":
-                    rand_multi = random.uniform(0, 100)
+                    rand_multi = pcg.get_float_between(0.0, 100.0)
                     cumulative_multi = 0
                     for multi, prob in self.multipliersSpawnrate.multipliers.items():
                         cumulative_multi += prob
@@ -122,6 +125,7 @@ class BonusSlotGame:
         self.grid = grid
         self.free_spins -= 1
         return current_spin_multiplier
+
 
 
     # --------------------------------------------------------------
