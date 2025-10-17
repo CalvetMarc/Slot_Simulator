@@ -4,7 +4,7 @@ import random
 from pathlib import Path
 from config.base.base_config_factory import BaseConfigFactory
 from src.game.BaseSlotGame import BaseSlotGame
-
+import os
 
 class GameManager:
     """
@@ -86,6 +86,9 @@ class GameManager:
         Runs a full RTP simulation for the base game and triggers bonus when applicable.
         Prints total RTP, base RTP, bonus RTP, and detailed debug stats for the bonus behavior.
         """
+        print("────────────────────────────────────────────────────────────────────────────────────────────────────────────────")
+        print("RTP Simulation In Progress...")
+
         total_bet = 0.0
         total_win = 0.0
         base_win_total = 0.0
@@ -99,7 +102,7 @@ class GameManager:
         total_chest_spins = 0
         total_bonus_multiplier_sum = 0
         total_bonus_multi_when_chest = 0
-        total_bonus_multiplier_final = 0
+        total_bonus_multiplier_final = 0        
 
         for spin_index in range(total_spins):
             # --- Base spin ---
@@ -120,8 +123,6 @@ class GameManager:
 
             if scatter_count >= 3 and self.bonus:
                 bonus_triggers += 1
-                print(f"\n🎁 BONUS TRIGGERED! ({scatter_count} scatters)")
-
                 grid_size = (self.game.grid.rows, self.game.grid.columns)
                 
                 # Reiniciem els debugs dins del bonus
@@ -135,7 +136,7 @@ class GameManager:
                 # Executem el bonus
                 bonus_win = self.bonus.start(scatters=scatter_count, bet=bet, gridSize=grid_size)
                 bonus_win_total += bonus_win
-                total_win += bonus_win
+                total_win += bonus_win                
 
                 # Recuperem els debugs del bonus
                 spins_done = getattr(self.bonus, "spins_played", 0)

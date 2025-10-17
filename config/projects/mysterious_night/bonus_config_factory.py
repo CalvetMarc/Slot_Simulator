@@ -145,6 +145,5 @@ class BonusConfigFactory:
                 print(f" - {lvl}")
 
         print("\n✅ BONUS CONFIGURATION LOADED SUCCESSFULLY.")
-        print(f"Loaded tables: {list(tables.keys())}")
-        print("────────────────────────────")
+        print(f"Loaded tables: {list(tables.keys())}")        
         return config
