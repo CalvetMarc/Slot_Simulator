@@ -27,6 +27,7 @@ class BonusSlotGame:
         self.debug_multi_sum = 0
         self.debug_multi_when_chest = 0
         self.spins_played = 0
+        self.debug_total_bonus_symbols_seen = 0  # 🧩 Comptador global de símbols bonus vistos
 
 
     # --------------------------------------------------------------
@@ -112,12 +113,14 @@ class BonusSlotGame:
             print(f"🔢 Avg multiplier per spin: {avg_multi_per_spin:.3f}")
             print(f"🎯 Avg multiplier (when chest): {avg_multi_when_chest:.3f}")
             print(f"💰 Total multiplier (this bonus): {self.total_multiplier:.3f}")
+            print(f"🏵️ Total BONUS symbols seen (all bonuses): {self.debug_total_bonus_symbols_seen}")
+
 
         return total_win
 
 
     # --------------------------------------------------------------
-    def spin(self, debug=False):
+    def spin(self, debug=True):
         """Genera la grid i calcula el multiplicador d’un spin del bonus."""
         current_spin_multiplier = 0
         grid = []
@@ -128,6 +131,17 @@ class BonusSlotGame:
                 rand_value = random.uniform(0, 100)
                 selected_element = None
                 cumulative = 0
+
+                # --- 🧪 DEBUG: mostra les probabilitats utilitzades per fer el spawn ---
+                if debug and r == 0 and c == 0:  # només mostrem una vegada per spin (primera cel·la)
+                    print("\n📊 BONUS ELEMENT PROBABILITIES USADES:")
+                    total_prob = 0
+                    for element, prob in self.elementsSpawnrate.probabilities.items():
+                        total_prob += prob
+                        print(f"  {element:<15} → {prob:>6.2f}% (cumulative {total_prob:>6.2f}%)")
+                    print(f"  Total probability sum: {total_prob:.2f}%")
+
+                # --- selecció de l'element ---
                 for element, prob in self.elementsSpawnrate.probabilities.items():
                     cumulative += prob
                     if rand_value <= cumulative:
@@ -173,6 +187,8 @@ class BonusSlotGame:
 
         bonus_count = sum(1 for row in self.grid for cell in row if "bonus" in (cell or "").lower())
         self.bonus_symbols_collected += bonus_count
+        self.debug_total_bonus_symbols_seen += bonus_count
+
 
         # --- Gestió de pujada de nivell ---
         if self.current_level.upgrade_possible and \

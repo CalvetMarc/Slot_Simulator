@@ -81,7 +81,7 @@ class GameManager:
 
 
     # ---------------------------------------------------------------------
-    def simulate_rtp(self, total_spins=1_000_000, bet=1.0):
+    def simulate_rtp(self, total_spins=1000000, bet=1.0):
         """
         Runs a full RTP simulation for the base game and triggers bonus when applicable.
         Prints total RTP, base RTP, bonus RTP, and detailed debug stats for the bonus behavior.

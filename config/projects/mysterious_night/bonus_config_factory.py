@@ -124,11 +124,27 @@ class BonusConfigFactory:
 
         if "bonus_spawner" in tables:
             config["bonus_spawner"] = BonusSpawner(tables["bonus_spawner"])
+            print("\n📦 BONUS SPAWNER DATAFRAME:")
+            print(tables["bonus_spawner"])
+            print("\n📦 BONUS SPAWNER PROBABILITIES (%):")
+            print(config["bonus_spawner"].probabilities)
 
         if "card_multiplier_spawner" in tables:
             config["card_multiplier_spawner"] = CardMultiplierSpawner(tables["card_multiplier_spawner"])
+            print("\n🎴 CARD MULTIPLIER SPAWNER DATAFRAME:")
+            print(tables["card_multiplier_spawner"])
+            print("\n🎴 CARD MULTIPLIER SPAWNER MULTIPLIERS (%):")
+            print(config["card_multiplier_spawner"].multipliers)
 
         if "levels" in tables:
             config["levels"] = BonusLevels(tables["levels"])
+            print("\n🧱 BONUS LEVELS DATAFRAME:")
+            print(tables["levels"])
+            print("\n🧱 PARSED BONUS LEVEL OBJECTS:")
+            for lvl in config["levels"].levels:
+                print(f" - {lvl}")
 
+        print("\n✅ BONUS CONFIGURATION LOADED SUCCESSFULLY.")
+        print(f"Loaded tables: {list(tables.keys())}")
+        print("────────────────────────────")
         return config
