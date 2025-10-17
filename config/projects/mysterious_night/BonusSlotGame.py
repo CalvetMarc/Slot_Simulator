@@ -7,11 +7,10 @@ class BonusSlotGame:
     """
 
     def __init__(self, elementsSpawnrate, multipliersSpawnrate, bonusLevels):
-        self.elementsSpawnrate = elementsSpawnrate          # BonusSpawner instance
-        self.multipliersSpawnrate = multipliersSpawnrate    # CardMultiplierSpawner instance
-        self.bonusLevels = bonusLevels                      # BonusLevels instance
+        self.elementsSpawnrate = elementsSpawnrate          
+        self.multipliersSpawnrate = multipliersSpawnrate    
+        self.bonusLevels = bonusLevels                      
 
-        # Estat general del bonus
         self.current_level = None
         self.grid = None
         self.grid_rows = 0
@@ -20,7 +19,6 @@ class BonusSlotGame:
         self.bonus_symbols_collected = 0
         self.total_multiplier = 0
 
-        # 🔹 Variables de debug per al GameManager (no eliminar)
         self.spins_played = 0
         self.debug_cf_count = 0
         self.debug_spins_with_chest = 0
@@ -31,9 +29,9 @@ class BonusSlotGame:
     # --------------------------------------------------------------
     def start(self, scatters, bet, gridSize):
         """
-        Inicia el bonus, executa spins i recull estadístiques.
+        Starts the bonus, executes spins, and collects statistics.
         """
-        # Assignar nivell segons els scatters
+        # Assign the level based on the number of scatters
         self.current_level = None
         for level in self.bonusLevels.levels:
             if scatters >= level.scatters_required:
@@ -42,7 +40,7 @@ class BonusSlotGame:
         if self.current_level is None or bet <= 0:
             return 0.0
 
-        # Iniciar estat del bonus
+        # Initialize bonus state
         self.free_spins = self.current_level.start_free_spins
         if self.free_spins <= 0:
             return 0.0
@@ -52,23 +50,23 @@ class BonusSlotGame:
         self.grid_rows, self.grid_cols = gridSize
         self.grid = [["" for _ in range(self.grid_cols)] for _ in range(self.grid_rows)]
 
-        # Reiniciar comptadors per al GameManager
+        # Reset counters for the GameManager
         self.spins_played = 0
         self.debug_cf_count = 0
         self.debug_spins_with_chest = 0
         self.debug_multi_sum = 0
         self.debug_multi_when_chest = 0
 
-        # Bucle principal del bonus
+        # Main bonus loop
         while self.free_spins > 0:
             self.spins_played += 1
             spin_multiplier = self.spin(debug=False)
 
-            # Comptar símbols rellevants
+            # Count relevant symbols
             cf_this_spin = sum(1 for row in self.grid for cell in row if "card front" in str(cell).lower())
             chest_found = any("chest" in str(cell).lower() for row in self.grid for cell in row)
 
-            # Actualitzar comptadors per al GameManager
+            # Update debug counters for GameManager
             self.debug_cf_count += cf_this_spin
             self.debug_multi_sum += spin_multiplier
             if chest_found:
@@ -77,39 +75,39 @@ class BonusSlotGame:
 
             self.evaluate_spin(spin_multiplier)
 
-        # Si no hi ha multiplicador acumulat, assignem x1
+        # If no multiplier accumulated, assign x1
         if self.total_multiplier == 0:
             self.total_multiplier = 1
 
-        # Càlcul final del premi
+        # Final win calculation
         total_win = bet * self.total_multiplier
         return total_win
 
 
     # --------------------------------------------------------------
     def spin(self, debug=False):
-        """Genera la grid i calcula el multiplicador d’un spin del bonus (usant PCG RNG)."""
+        """Generates the grid and calculates the multiplier for a bonus spin (using PCG RNG)."""
         current_spin_multiplier = 0
         grid = []
 
-        # Exemple: inicialitza la llavor (pots fer-ho un cop globalment fora d'aquí)        
+        # RNG seed initialization can be done globally (handled outside this function)        
 
         for _ in range(self.grid_rows):
             fila = []
             for _ in range(self.grid_cols):
-                # --- Usa el teu RNG natiu ---
+                # --- Use native PCG RNG instead of Python's random ---
                 rand_value = pcg.get_float_between(0.0, 100.0)
                 selected_element = None
                 cumulative = 0
 
-                # Selecció d'element segons probabilitats
+                # Select element based on spawn probabilities
                 for element, prob in self.elementsSpawnrate.probabilities.items():
                     cumulative += prob
                     if rand_value <= cumulative:
                         selected_element = element
                         break
 
-                # Si és "Card Front", afegir multiplicador
+                # If "Card Front", add a multiplier
                 if selected_element and selected_element.lower() == "card front":
                     rand_multi = pcg.get_float_between(0.0, 100.0)
                     cumulative_multi = 0
@@ -130,7 +128,7 @@ class BonusSlotGame:
 
     # --------------------------------------------------------------
     def evaluate_spin(self, multiplier):
-        """Guarda el multiplicador si hi ha un chest i gestiona upgrades."""
+        """Stores the multiplier if a chest is found and manages possible level upgrades."""
         chest_found = any("chest" in (cell or "").lower() for row in self.grid for cell in row)
         if not chest_found:
             multiplier = 0
@@ -138,7 +136,7 @@ class BonusSlotGame:
         bonus_count = sum(1 for row in self.grid for cell in row if "bonus" in (cell or "").lower())
         self.bonus_symbols_collected += bonus_count
 
-        # Gestió de pujada de nivell
+        # Level-up management
         if self.current_level.upgrade_possible and \
            self.bonus_symbols_collected >= self.current_level.bonus_to_upgrade:
             next_level = self.bonusLevels.get_level(self.current_level.level_id + 1)

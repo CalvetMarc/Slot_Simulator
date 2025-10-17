@@ -2,8 +2,8 @@ from src.freeprngLib import pcg
 
 class BaseSlotGame:
     """
-    Represents the slot game engine for 'Mysterious Night'.
-    Handles the grid, strips, paylines, and paytable directly.
+    Represents the base slot game engine for 'Mysterious Night'.
+    Handles the grid, reels, paylines, and paytable mechanics directly.
     """
 
     def __init__(self, grid, strips, paylines, paytable):
@@ -12,12 +12,12 @@ class BaseSlotGame:
         self.paylines = paylines
         self.paytable = paytable
 
-    def spin(self, debug = False):
+    def spin(self, debug=False):
         """
         Performs a professional-style spin:
-        - For each reel, picks a random starting index.
+        - For each reel, selects a random starting index using the PCG RNG.
         - Takes as many symbols as there are rows in the grid.
-        - Wraps around the strip if needed.
+        - Wraps around the reel strip if necessary.
         """
         if debug:
             print("\n🔄 Performing spin...")
@@ -26,40 +26,41 @@ class BaseSlotGame:
         num_reels = self.grid.columns
         spin_result = [[] for _ in range(num_rows)]
 
-        # For each reel (strip)
+        # Iterate through each reel (strip)
         for reel_index in range(num_reels):
             reel = self.strips.reels[reel_index]
-            # 🔹 Usa el teu RNG en comptes de random.randint
+            # 🔹 Use PCG RNG instead of random.randint
             start_index = pcg.get_int_between(0, len(reel) - 1)
 
-            # Get visible symbols (wrap around if needed)
+            # Retrieve visible symbols (wrap around if needed)
             visible = [reel[(start_index + i) % len(reel)] for i in range(num_rows)]
 
-            # Place vertically into the grid
+            # Place symbols vertically into the grid
             for row in range(num_rows):
                 spin_result[row].append(visible[row])
 
         if debug:
             print("🎯 Spin result (grid):")
 
-        # Calculem l'ample màxim de cada columna
+        # Compute the maximum width of each column for pretty printing
         col_widths = [max(len(row[col]) for row in spin_result) for col in range(len(spin_result[0]))]
 
-        # Printem cada fila amb alineació
+        # Print each row with alignment
         for row in spin_result:
             formatted_row = " | ".join(f"{symbol:<{col_widths[i]}}" for i, symbol in enumerate(row))
             if debug:
                 print(formatted_row)
 
-        # Update the internal grid to reflect the spin
+        # Update the internal grid state to reflect the current spin
         self.grid.grid = spin_result
         return spin_result
 
-    def evaluate_spin(self, bet=1.0, debug = False):
+
+    def evaluate_spin(self, bet=1.0, debug=False):
         """
-        Evaluates the current grid according to paylines and paytable.
-        Wilds substitute for any symbol (except Scatter).
-        Returns total win amount.
+        Evaluates the current grid based on paylines and paytable.
+        Wilds substitute for any symbol except Scatter.
+        Returns the total win amount for this spin.
         """
         total_win = 0.0
         if debug:
@@ -68,7 +69,7 @@ class BaseSlotGame:
         for i, line in enumerate(self.paylines.lines, start=1):
             symbols = [self.grid.get_symbol(row, col) for col, row in enumerate(line)]
 
-            # Busquem el primer símbol no-wild ni scatter
+            # Find the first non-Wild and non-Scatter symbol
             first_symbol = next((s for s in symbols if s not in ["Wild", "Scatter"]), None)
             if not first_symbol or first_symbol not in self.paytable.table:
                 continue
@@ -80,7 +81,7 @@ class BaseSlotGame:
                 else:
                     break
 
-            # Si tenim 3 o més consecutius, premi
+            # If 3 or more consecutive matches, award payout
             if count >= 3:
                 payout = self.paytable.get_payout(first_symbol, count)
                 win_amount = payout * bet
@@ -96,7 +97,7 @@ class BaseSlotGame:
 
     def show_summary(self):
         """
-        Prints a quick summary of the game configuration.
+        Prints a quick summary of the current slot game configuration.
         """
         print("\n📊 Game Summary:")
         print(f"Grid size: {int(self.grid.data.loc[0, 'Rows'])}x{int(self.grid.data.loc[0, 'Columns'])}" if self.grid.data is not None else "Grid size: Unknown")

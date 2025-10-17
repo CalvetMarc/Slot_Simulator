@@ -6,9 +6,11 @@ from config.base.base_config_factory import BaseConfigFactory
 from src.game.BaseSlotGame import BaseSlotGame
 import os
 
+
 class GameManager:
     """
-    Loads configuration and runs the slot game (base + bonus).
+    Loads configuration files and manages the full slot game lifecycle (base + bonus).
+    Handles initialization, simulation, and debug reporting.
     """
 
     def __init__(self):
@@ -32,18 +34,18 @@ class GameManager:
         with open(game_settings_path, "r", encoding="utf-8") as f:
             self.game_settings = json.load(f)
 
-        # Get table names from the file
+        # Retrieve table names from the JSON
         base_tables = self.game_settings.get("base_data", [])
         bonus_tables = self.game_settings.get("bonus_data", [])
 
-        # 🔹 Load Excel config via the factory
+        # 🔹 Load Excel configuration via the factory
         base_factory = BaseConfigFactory(self.game_name)
         base_config = base_factory.build(base_tables)
 
         # 🔹 Initialize the base game
         self.game = BaseSlotGame(**base_config)
 
-        # --- Load BONUS configuration dynamically ---
+        # --- Dynamically load BONUS configuration ---
         try:
             bonus_module_path = f"config.projects.{self.game_name}.bonus_config_factory"
             bonus_module = import_module(bonus_module_path)
@@ -53,12 +55,12 @@ class GameManager:
             bonus_factory = BonusConfigFactory(self.game_name)
             bonus_config = bonus_factory.build(bonus_tables)
 
-            # Import BonusSlotGame dynamically
+            # Dynamically import BonusSlotGame class
             bonus_game_path = f"config.projects.{self.game_name}.BonusSlotGame"
             bonus_game_module = import_module(bonus_game_path)
             BonusSlotGame = getattr(bonus_game_module, "BonusSlotGame")
 
-            # 🧩 Ajustem els noms de claus per coincidir amb el constructor
+            # 🧩 Match config keys with constructor arguments
             self.bonus = BonusSlotGame(
                 elementsSpawnrate=bonus_config.get("bonus_spawner"),
                 multipliersSpawnrate=bonus_config.get("card_multiplier_spawner"),
@@ -72,7 +74,7 @@ class GameManager:
 
     # ---------------------------------------------------------------------
     def test(self):
-        """Runs a basic demo spin for the current game."""
+        """Runs a single test spin to verify that the game loads correctly."""
         print("\n🚀 Running game demo...")
         self.game.spin(True)
         self.game.evaluate_spin(1, True)
@@ -81,8 +83,13 @@ class GameManager:
     # ---------------------------------------------------------------------
     def simulate_rtp(self, debug=False, total_spins=2000000, bet=1.0):
         """
-        Runs a full RTP simulation for the base game and triggers bonus when applicable.
-        Prints total RTP, base RTP, bonus RTP, and detailed debug stats for the bonus behavior.
+        Executes a full RTP simulation for both base and bonus games.
+        Calculates total RTP, base RTP, bonus RTP, and provides debug analytics.
+
+        Args:
+            debug (bool): If True, prints detailed simulation data.
+            total_spins (int): Number of spins to simulate.
+            bet (float): The bet amount per spin.
         """
         print("────────────────────────────────\n")
         print("RTP Simulation In Progress...")
@@ -92,9 +99,9 @@ class GameManager:
         base_win_total = 0.0
         bonus_win_total = 0.0
         bonus_triggers = 0
-        bonus_total_spins = 0  # Total spins dins del bonus
+        bonus_total_spins = 0  # Total spins within all bonus rounds
 
-        # --- DEBUG counters globals ---
+        # --- Global debug counters ---
         total_cf_count = 0
         total_bonus_spins = 0
         total_chest_spins = 0
@@ -123,7 +130,7 @@ class GameManager:
                 bonus_triggers += 1
                 grid_size = (self.game.grid.rows, self.game.grid.columns)
                 
-                # Reiniciem els debugs dins del bonus
+                # Reset bonus debug counters
                 self.bonus.debug_spins = 0
                 self.bonus.debug_cf_count = 0
                 self.bonus.debug_spins_with_chest = 0
@@ -131,12 +138,12 @@ class GameManager:
                 self.bonus.debug_multi_when_chest = 0
                 self.bonus.spins_played = 0
 
-                # Executem el bonus
+                # Execute bonus round
                 bonus_win = self.bonus.start(scatters=scatter_count, bet=bet, gridSize=grid_size)
                 bonus_win_total += bonus_win
                 total_win += bonus_win                
 
-                # Recuperem els debugs del bonus
+                # Retrieve debug info from the bonus round
                 spins_done = getattr(self.bonus, "spins_played", 0)
                 cf_count = getattr(self.bonus, "debug_cf_count", 0)
                 chest_spins = getattr(self.bonus, "debug_spins_with_chest", 0)
@@ -158,7 +165,7 @@ class GameManager:
         total_rtp = base_rtp + bonus_rtp
         avg_bonus_spins = (bonus_total_spins / bonus_triggers) if bonus_triggers > 0 else 0
 
-        # --- DEBUG calculs globals ---
+        # --- Global debug calculations ---
         avg_cf_per_spin = total_cf_count / total_bonus_spins if total_bonus_spins > 0 else 0
         chest_prob_per_spin = total_chest_spins / total_bonus_spins if total_bonus_spins > 0 else 0
         avg_multi_per_spin = total_bonus_multiplier_sum / total_bonus_spins if total_bonus_spins > 0 else 0
@@ -167,14 +174,12 @@ class GameManager:
         print("Simulation complete! ✅")
         print("\n────────────────────────────────")
 
-        if(debug) :           
+        if debug:           
             print("\nDebug Analytics\n")
-            
             print(f"🎯 Base RTP:  {base_rtp:.2f}%")
             print(f"🎯 Bonus RTP: {bonus_rtp:.2f}%")
             print(f"🏁 TOTAL RTP: {total_rtp:.2f}%")
 
-            
             print(f"\nBonus Played: {bonus_triggers:,}")
             print(f"Avg spins per bonus: {avg_bonus_spins:.2f}")            
             print(f"Avg multiplier per spin: {avg_multi_per_spin:.3f}")
@@ -183,6 +188,4 @@ class GameManager:
             print(f"Chest probability per spin: {chest_prob_per_spin*100:.2f}%")
             print("\n────────────────────────────────")
             
-
         return total_rtp
-

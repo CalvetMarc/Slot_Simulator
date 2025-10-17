@@ -31,14 +31,14 @@ class CardMultiplierSpawner:
     def __init__(self, df):
         self.data = df
 
-        # Normalitzem noms de columnes
+        # Normalize column names
         df.columns = [str(c).strip().lower() for c in df.columns]
 
-        # Verifiquem que existeixen les columnes necessàries
+        # Verify that the required columns exist
         if "card multiplier" not in df.columns or "probability" not in df.columns:
             raise KeyError(f"❌ Expected columns 'Card Multiplier' and 'Probability' not found in {list(df.columns)}")
 
-        # Creem el diccionari {multiplier: probability%}, multiplicant per 100
+        # Create the dictionary {multiplier: probability%}, multiplying by 100
         self.multipliers = {
             int(row["card multiplier"]): float(row["probability"]) * 100
             for _, row in df.iterrows()
@@ -58,7 +58,7 @@ class CardMultiplierSpawner:
 
 class Level:
     """
-    Represents one bonus level.
+    Represents one bonus level in the bonus game.
     """
     def __init__(self, level_id, scatters, free_spins, upgrade_required):
         self.level_id = int(level_id)
@@ -75,7 +75,7 @@ class Level:
 
 class BonusLevels:
     """
-    Contains all bonus levels, ordered by level.
+    Container class for all bonus levels, ordered by level ID.
     """
     def __init__(self, df):
         self.data = df
@@ -116,8 +116,8 @@ class BonusConfigFactory:
         self.file_name = "slot_config.xlsx"
         self.game_name = game_name
 
-    def build(self, table_names, debug = False):
-        """Loads all tables listed in table_names and builds config objects."""
+    def build(self, table_names, debug=False):
+        """Loads all tables listed in table_names and builds configuration objects."""
 
         print("Loading Bonus Config...")
         tables = load_game_tables(table_names, self.base_path, self.file_name)
@@ -133,10 +133,9 @@ class BonusConfigFactory:
         if "levels" in tables:
             config["levels"] = BonusLevels(tables["levels"])
                 
-        
         print("BONUS CONFIG LOADED SUCCESSFULLY ✅\n")
 
-        if(debug):
+        if debug:
             print("────────────────────────────────\n")
             print("Debug Loaded Bonus Data")      
             print("\n────────────────────────────────")
